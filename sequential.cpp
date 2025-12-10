@@ -7,7 +7,7 @@ using namespace std::complex_literals;
 
 class Simulation {
     int _width, _height;
-    double _grid_size;
+    double _grid_size, _mass;
     std::vector<std::complex<double>> _wave, _new_wave;
 
     void _normalize() {
@@ -19,21 +19,22 @@ class Simulation {
 
 public:
     Simulation(
-        int width, int height, double y_range,
-        int cx, int cy, double a, double kx, double ky
+        int width, int height, int cx, int cy,
+        double y_range_ang, double mass_me, double a, double kx, double ky
     ) {
         _width = width;
         _height = height;
-        _grid_size = y_range / height;
+        _grid_size = y_range_ang / 0.529177 / height;
+        _mass = mass_me;
         _wave.resize(width * height);
         _new_wave.resize(width * height);
         for (int i=1; i<height-1; i++) {
             for (int j=1; j<width-1; j++) {
                 double dx = (j - cx) * _grid_size;
-                double dy = (i - cy) * _grid_size;
+                double dy = (cy - i) * _grid_size;
                 double r2 = dx*dx + dy*dy;
                 double mag = std::sqrt(std::exp(-a * r2));
-                auto ikx = -1i * (kx*dx + ky*dy);
+                auto ikx = 1i * (kx*dx + ky*dy);
                 _wave[j + i*width] = mag * std::exp(ikx);
             }
         }
@@ -42,7 +43,8 @@ public:
 
     const auto& wave() { return _wave; };
 
-    void step(double dt) {
+    void step(double dt_as) {
+        double dt = dt_as / 24.1888;
         double h2 = _grid_size * _grid_size;
         for (int i=1; i<_height-1; i++) {
             for (int j=1; j<_width-1; j++) {
@@ -53,7 +55,7 @@ public:
                 laplacian += _wave[k - _width];
                 laplacian += _wave[k + _width];
                 laplacian /= h2;
-                _new_wave[k] = _wave[k] + -1i * laplacian * dt;
+                _new_wave[k] = _wave[k] + 1i * (laplacian / (2*_mass)) * dt;
             }
         }
         _wave.swap(_new_wave);
@@ -95,9 +97,9 @@ int main() {
     wave_plot.move(0, 0);
     wave_plot.resize(window.height() * aspect, window.height());
 
-    Simulation sim(sim_w, sim_h, 200, sim_w/4, sim_h/2, 0.01, 1, 0);
+    Simulation sim(sim_w, sim_h, sim_w/4, sim_h/2, 100, 1, 0.01, 1, 0);
     while (!window.closed()) {
-        sim.step(0.01);
+        for (int i=0; i<200; i++) sim.step(0.05);
         auto &wave = sim.wave();
         wave_plot.update([&](int *pixels) {
             for (int i=0; i<sim_w*sim_h; i++)
