@@ -196,10 +196,10 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         if (std::string(argv[1]) == "--batch") {
             if (argc < 6) {
-                std::cerr
-                    << "Usage: " << argv[0]
-                    << " --batch <output_file> <num_frames> <steps_per_frame> <fps>"
-                    << std::endl;
+                std::cerr << "Usage: " << argv[0]
+                          << " --batch <output_file> <num_frames> "
+                             "<steps_per_frame> <fps>"
+                          << std::endl;
                 return 1;
             }
             std::string output_file = argv[2];
@@ -207,14 +207,18 @@ int main(int argc, char *argv[]) {
             int steps_per_frame = std::stoi(argv[4]);
             int fps = std::stoi(argv[5]);
 
-            cv::VideoWriter writer(output_file, cv::VideoWriter::fourcc('H','2','6','4'), fps, cv::Size(sim_w, sim_h));
+            cv::VideoWriter writer(output_file,
+                                   cv::VideoWriter::fourcc('H', '2', '6', '4'),
+                                   fps, cv::Size(sim_w, sim_h));
             if (!writer.isOpened()) {
-                std::cerr << "Failed to open video writer: " << output_file << std::endl;
+                std::cerr << "Failed to open video writer: " << output_file
+                          << std::endl;
                 return 1;
             }
 
             std::cout << "Running CUDA batch mode: " << num_frames
-                      << " frames, " << steps_per_frame << " steps/frame" << std::endl;
+                      << " frames, " << steps_per_frame << " steps/frame"
+                      << std::endl;
 
             for (int i = 0; i < num_frames; ++i) {
                 for (int j = 0; j < steps_per_frame; ++j) {
@@ -222,7 +226,8 @@ int main(int argc, char *argv[]) {
                 }
                 int *gpu_pixels = sim.get_pixel_buffer();
                 std::vector<int> host_pixels(sim_w * sim_h);
-                cudaMemcpy(host_pixels.data(), gpu_pixels, sim_w * sim_h * sizeof(int), cudaMemcpyDeviceToHost);
+                cudaMemcpy(host_pixels.data(), gpu_pixels,
+                           sim_w * sim_h * sizeof(int), cudaMemcpyDeviceToHost);
                 cv::Mat mat(sim_h, sim_w, CV_8UC4, host_pixels.data());
                 cv::Mat bgr;
                 cv::cvtColor(mat, bgr, cv::COLOR_BGRA2BGR);

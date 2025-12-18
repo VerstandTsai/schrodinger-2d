@@ -96,10 +96,10 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         if (std::string(argv[1]) == "--batch") {
             if (argc < 6) {
-                std::cerr
-                    << "Usage: " << argv[0]
-                    << " --batch <output_file> <num_frames> <steps_per_frame> <fps>"
-                    << std::endl;
+                std::cerr << "Usage: " << argv[0]
+                          << " --batch <output_file> <num_frames> "
+                             "<steps_per_frame> <fps>"
+                          << std::endl;
                 return 1;
             }
             std::string output_file = argv[2];
@@ -107,9 +107,12 @@ int main(int argc, char *argv[]) {
             int steps_per_frame = std::stoi(argv[4]);
             int fps = std::stoi(argv[5]);
 
-            cv::VideoWriter writer(output_file, cv::VideoWriter::fourcc('H','2','6','4'), fps, cv::Size(sim_w, sim_h));
+            cv::VideoWriter writer(output_file,
+                                   cv::VideoWriter::fourcc('H', '2', '6', '4'),
+                                   fps, cv::Size(sim_w, sim_h));
             if (!writer.isOpened()) {
-                std::cerr << "Failed to open video writer: " << output_file << std::endl;
+                std::cerr << "Failed to open video writer: " << output_file
+                          << std::endl;
                 return 1;
             }
 
