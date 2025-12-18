@@ -133,7 +133,8 @@ __device__ int device_rgba(double r, double g, double b, double a) {
     unsigned char gu = g * 0xff;
     unsigned char bu = b * 0xff;
     unsigned char au = a * 0xff;
-    return (au << 24) | (ru << 16) | (gu << 8) | bu;
+    return (bu << 24) | (gu << 16) | (ru << 8) |
+           au;  // BGRA format to match sequential
 }
 
 __global__ void complex_to_rgba_kernel(thrust::complex<double> *wave,
@@ -147,12 +148,24 @@ __global__ void complex_to_rgba_kernel(thrust::complex<double> *wave,
 
         double a = thrust::abs(z);
         double y = atan(a) / M_PI;
+
+        // Black background for very small amplitudes
+        if (a < 1e-9 || y < 0.01) {
+            pixels[idx] = device_rgba(0.0, 0.0, 0.0, 1);
+            return;
+        }
+
         z *= 0.5 * y / a;
         double u = z.real();
         double v = z.imag();
         double r = y + 1.5748 * v;
         double g = y - 0.1873 * u - 0.4681 * v;
         double b = y + 1.8556 * u;
+
+        // Clamp values to [0, 1]
+        r = fmax(0.0, fmin(1.0, r));
+        g = fmax(0.0, fmin(1.0, g));
+        b = fmax(0.0, fmin(1.0, b));
 
         pixels[idx] = device_rgba(r, g, b, 1);
     }

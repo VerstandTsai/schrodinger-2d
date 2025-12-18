@@ -107,7 +107,7 @@ int complex2rgba(std::complex<double> z) {
     double a = std::abs(z);
     double y = std::atan(a) / M_PI;
     if (a < 1e-9 || y < 0.01) {
-        return rgba(0.2, 0.2, 0.2, 1);
+        return rgba(0.0, 0.0, 0.0, 1);  // Black background
     }
     z *= 0.5 * y / a;
     double u = std::real(z);
